@@ -1,0 +1,483 @@
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Evrensel ve Güvenli Request Fonksiyonu
+local function sendHttpRequest(options)
+    local req = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
+    if req then
+        return req(options)
+    end
+    return nil
+end
+
+local parentGui = CoreGui
+if gethui then
+    parentGui = gethui()
+elseif not pcall(function() return CoreGui.Name end) then
+    parentGui = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+if parentGui:FindFirstChild("LightningHubUI") then
+    parentGui.LightningHubUI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LightningHubUI"
+ScreenGui.Parent = parentGui
+
+-- Webhook Koruması (Parçalanmış Gizli Link)
+local basePart = "https://webhook.newstargeted.com/api/webhooks/"
+local channelId = "1563543637025886240/"
+local tokenPart = "KeUa5PlDDmSrMQvdeyO5d6VU9obT4DV1whwjF4ibRWCUvh5jc4DvBV92GA1di01-Dixo"
+local WEBHOOK_URL = basePart .. channelId .. tokenPart
+
+-- Cooldown (Spam Koruması) Zamanlayıcısı
+local lastRequestTick = 0
+
+-- Toggle Butonu
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 45, 0, 45)
+ToggleButton.Position = UDim2.new(0, 15, 0.5, -22)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 215, 0)
+ToggleButton.Text = "⚡"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 20
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Parent = ToggleButton
+ToggleStroke.Color = Color3.fromRGB(255, 215, 0)
+ToggleStroke.Thickness = 2
+
+-- Ana Panel
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 560, 0, 340)
+MainFrame.Position = UDim2.new(0.5, -280, 0.5, -170)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Parent = MainFrame
+MainStroke.Color = Color3.fromRGB(45, 45, 55)
+MainStroke.Thickness = 1
+
+-- TopBar
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 8)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "LightningHub ⚡️ Music Library"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 14
+TitleLabel.Parent = TopBar
+
+-- X Tuşu (Minimize)
+local minimized = false
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 28, 0, 24)
+MinimizeBtn.Position = UDim2.new(1, -34, 0, 5)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+MinimizeBtn.Text = "X"
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 12
+MinimizeBtn.Parent = TopBar
+Instance.new("UICorner", MinimizeBtn).CornerRadius = UDim.new(0, 6)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        MainFrame.Size = UDim2.new(0, 560, 0, 35)
+    else
+        MainFrame.Size = UDim2.new(0, 560, 0, 340)
+    end
+end)
+
+local function ToggleUI()
+    MainFrame.Visible = not MainFrame.Visible
+end
+
+ToggleButton.MouseButton1Click:Connect(ToggleUI)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.L then
+        ToggleUI()
+    end
+end)
+
+-- Tab Menü Barı
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, -20, 0, 35)
+TabContainer.Position = UDim2.new(0, 10, 0, 42)
+TabContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+TabContainer.Parent = MainFrame
+Instance.new("UICorner", TabContainer).CornerRadius = UDim.new(0, 6)
+
+local UIHBLayout = Instance.new("UIListLayout")
+UIHBLayout.FillDirection = Enum.FillDirection.Horizontal
+UIHBLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIHBLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+UIHBLayout.Padding = UDim.new(0, 10)
+UIHBLayout.Parent = TabContainer
+
+local function createTabButton(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 150, 0, 27)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    btn.Text = name
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    btn.Parent = TabContainer
+    return btn
+end
+
+local TabSaveID = createTabButton("Save Music ID")
+local TabLibrary = createTabButton("Music ID Library")
+local TabSettings = createTabButton("Settings")
+
+-- Sayfalar
+local PagesFolder = Instance.new("Folder")
+PagesFolder.Name = "PagesFolder"
+PagesFolder.Parent = MainFrame
+
+local function createPage()
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, -20, 1, -90)
+    page.Position = UDim2.new(0, 10, 0, 85)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.Parent = PagesFolder
+    return page
+end
+
+local PageSave = createPage()
+local PageLibrary = createPage()
+local PageSettings = createPage()
+
+-- Save Music ID (İstek)
+local IDInput = Instance.new("TextBox")
+IDInput.Size = UDim2.new(0, 160, 0, 35)
+IDInput.Position = UDim2.new(0, 0, 0, 10)
+IDInput.PlaceholderText = "Audio ID"
+IDInput.Text = ""
+IDInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+IDInput.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+IDInput.Font = Enum.Font.Gotham
+IDInput.Parent = PageSave
+Instance.new("UICorner", IDInput).CornerRadius = UDim.new(0, 6)
+
+IDInput:GetPropertyChangedSignal("Text"):Connect(function()
+    IDInput.Text = IDInput.Text:gsub("%D", "")
+end)
+
+local NameInput = Instance.new("TextBox")
+NameInput.Size = UDim2.new(0, 200, 0, 35)
+NameInput.Position = UDim2.new(0, 175, 0, 10)
+NameInput.PlaceholderText = "Name (optional)"
+NameInput.Text = ""
+NameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameInput.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+NameInput.Font = Enum.Font.Gotham
+NameInput.Parent = PageSave
+Instance.new("UICorner", NameInput).CornerRadius = UDim.new(0, 6)
+
+local SendReqBtn = Instance.new("TextButton")
+SendReqBtn.Size = UDim2.new(0, 140, 0, 35)
+SendReqBtn.Position = UDim2.new(1, -140, 0, 10)
+SendReqBtn.BackgroundColor3 = Color3.fromRGB(45, 160, 95)
+SendReqBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendReqBtn.Text = "Send Request"
+SendReqBtn.Font = Enum.Font.GothamBold
+SendReqBtn.Parent = PageSave
+Instance.new("UICorner", SendReqBtn).CornerRadius = UDim.new(0, 6)
+
+-- Music ID Library
+local SearchBar = Instance.new("TextBox")
+SearchBar.Size = UDim2.new(1, 0, 0, 35)
+SearchBar.Position = UDim2.new(0, 0, 0, 10)
+SearchBar.PlaceholderText = "🔍 Search Song Name or ID..."
+SearchBar.Text = ""
+SearchBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchBar.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+SearchBar.Font = Enum.Font.Gotham
+SearchBar.Parent = PageLibrary
+Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 6)
+
+local ScrollArea = Instance.new("ScrollingFrame")
+ScrollArea.Size = UDim2.new(1, 0, 1, -55)
+ScrollArea.Position = UDim2.new(0, 0, 0, 55)
+ScrollArea.BackgroundTransparency = 1
+ScrollArea.ScrollBarThickness = 6
+ScrollArea.Parent = PageLibrary
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.Parent = ScrollArea
+
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    ScrollArea.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 15)
+end)
+
+local function addSongUI(songId, name)
+    local Item = Instance.new("Frame")
+    Item.Size = UDim2.new(1, -10, 0, 45)
+    Item.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+    Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 6)
+    
+    local InfoLabel = Instance.new("TextLabel")
+    InfoLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    InfoLabel.Position = UDim2.new(0, 10, 0, 0)
+    InfoLabel.BackgroundTransparency = 1
+    InfoLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    InfoLabel.Font = Enum.Font.GothamBold
+    InfoLabel.TextSize = 13
+    InfoLabel.Text = name .. " (" .. songId .. ")"
+    InfoLabel.Name = "InfoLabel"
+    InfoLabel.Parent = Item
+    
+    local CopyBtn = Instance.new("TextButton")
+    CopyBtn.Size = UDim2.new(0, 60, 0, 25)
+    CopyBtn.Position = UDim2.new(1, -65, 0, 10)
+    CopyBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
+    CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CopyBtn.Text = "Copy"
+    CopyBtn.Font = Enum.Font.Gotham
+    Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 4)
+    CopyBtn.Parent = Item
+    
+    CopyBtn.MouseButton1Click:Connect(function()
+        setclipboard(tostring(songId))
+        CopyBtn.Text = "Copied!"
+        task.wait(1)
+        CopyBtn.Text = "Copy"
+    end)
+    
+    Item.Parent = ScrollArea
+end
+
+local preloadedSongs = {
+    {id = "116197983114890", name = "Billie Jean"}, {id = "95131770144654", name = "AURA = ∞ (Brazilian Phonk/Funk Epic Aura Music)"},
+    {id = "1842150151", name = "Turkish March"}, {id = "1837015626", name = "Tokyo Drift"},
+    {id = "74107926236166", name = "c00lkidd by halilibrahimseviml1"}, {id = "136687027554626", name = "Boss Fight"},
+    {id = "6070263388", name = "Gangsta's Paradise"}, {id = "6689996382", name = "Eminem Without me Beat Loop"},
+    {id = "131731132779759", name = "Moonlight Remix by halilibrahimseviml1"}, {id = "1846088038", name = "Morning Mood"},
+    {id = "1836009208", name = "Classic Easter"}, {id = "1838998447", name = "Western song"},
+    {id = "0000000000", name = "coming soon 13"}, {id = "0000000000", name = "coming soon 14"},
+    {id = "0000000000", name = "coming soon 15"}, {id = "0000000000", name = "coming soon 16"},
+    {id = "0000000000", name = "coming soon 17"}, {id = "0000000000", name = "coming soon 18"},
+    {id = "0000000000", name = "coming soon 19"}, {id = "0000000000", name = "coming soon 20"},
+    {id = "0000000000", name = "coming soon 21"}, {id = "0000000000", name = "coming soon 22"},
+    {id = "0000000000", name = "coming soon 23"}, {id = "0000000000", name = "coming soon 24"},
+    {id = "0000000000", name = "coming soon 25"}, {id = "0000000000", name = "coming soon 26"},
+    {id = "0000000000", name = "coming soon 27"}, {id = "0000000000", name = "coming soon 28"},
+    {id = "0000000000", name = "coming soon 29"}, {id = "0000000000", name = "coming soon 30"},
+}
+
+for _, song in ipairs(preloadedSongs) do
+    addSongUI(song.id, song.name)
+end
+
+SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
+    local query = string.lower(SearchBar.Text)
+    for _, item in ipairs(ScrollArea:GetChildren()) do
+        if item:IsA("Frame") then
+            local info = item:FindFirstChild("InfoLabel")
+            if info then
+                if query == "" or string.find(string.lower(info.Text), query) then
+                    item.Visible = true
+                else
+                    item.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- Settings
+local ThemeLabel = Instance.new("TextLabel")
+ThemeLabel.Size = UDim2.new(1, 0, 0, 25)
+ThemeLabel.Position = UDim2.new(0, 0, 0, 10)
+ThemeLabel.BackgroundTransparency = 1
+ThemeLabel.Text = "UI Theme Selection:"
+ThemeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+ThemeLabel.TextXAlignment = Enum.TextXAlignment.Left
+ThemeLabel.Font = Enum.Font.GothamBold
+ThemeLabel.TextSize = 13
+ThemeLabel.Parent = PageSettings
+
+local DarkThemeBtn = Instance.new("TextButton")
+DarkThemeBtn.Size = UDim2.new(0.48, 0, 0, 35)
+DarkThemeBtn.Position = UDim2.new(0, 0, 0, 40)
+DarkThemeBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+DarkThemeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DarkThemeBtn.Text = "Dark Theme"
+DarkThemeBtn.Font = Enum.Font.GothamBold
+DarkThemeBtn.Parent = PageSettings
+Instance.new("UICorner", DarkThemeBtn).CornerRadius = UDim.new(0, 6)
+
+local PurpleThemeBtn = Instance.new("TextButton")
+PurpleThemeBtn.Size = UDim2.new(0.48, 0, 0, 35)
+PurpleThemeBtn.Position = UDim2.new(0.52, 0, 0, 40)
+PurpleThemeBtn.BackgroundColor3 = Color3.fromRGB(50, 30, 70)
+PurpleThemeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PurpleThemeBtn.Text = "Purple Theme"
+PurpleThemeBtn.Font = Enum.Font.GothamBold
+PurpleThemeBtn.Parent = PageSettings
+Instance.new("UICorner", PurpleThemeBtn).CornerRadius = UDim.new(0, 6)
+
+DarkThemeBtn.MouseButton1Click:Connect(function()
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    TabContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+end)
+
+PurpleThemeBtn.MouseButton1Click:Connect(function()
+    MainFrame.BackgroundColor3 = Color3.fromRGB(35, 20, 45)
+    TopBar.BackgroundColor3 = Color3.fromRGB(25, 12, 35)
+    TabContainer.BackgroundColor3 = Color3.fromRGB(45, 25, 60)
+end)
+
+-- Feedback
+local FeedbackBox = Instance.new("TextBox")
+FeedbackBox.Size = UDim2.new(1, 0, 0, 50)
+FeedbackBox.Position = UDim2.new(0, 0, 0, 95)
+FeedbackBox.PlaceholderText = "Write your feedback here..."
+FeedbackBox.Text = ""
+FeedbackBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+FeedbackBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+FeedbackBox.Font = Enum.Font.Gotham
+FeedbackBox.ClearTextOnFocus = false
+FeedbackBox.MultiLine = true
+FeedbackBox.Parent = PageSettings
+Instance.new("UICorner", FeedbackBox).CornerRadius = UDim.new(0, 6)
+
+local SendFeedbackBtn = Instance.new("TextButton")
+SendFeedbackBtn.Size = UDim2.new(1, 0, 0, 35)
+SendFeedbackBtn.Position = UDim2.new(0, 0, 0, 155)
+SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
+SendFeedbackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendFeedbackBtn.Text = "Send Feedback"
+SendFeedbackBtn.Font = Enum.Font.GothamBold
+SendFeedbackBtn.Parent = PageSettings
+Instance.new("UICorner", SendFeedbackBtn).CornerRadius = UDim.new(0, 6)
+
+SendFeedbackBtn.MouseButton1Click:Connect(function()
+    local fbText = FeedbackBox.Text
+    if fbText == "" or fbText:match("^%s*$") then return end
+    
+    SendFeedbackBtn.Text = "Sending..."
+    task.spawn(function()
+        local payload = HttpService:JSONEncode({
+            content = "📩 **Yeni Feedback/Geri Bildirim Alındı!**\n**Gönderen:** " .. LocalPlayer.Name .. " (ID: " .. LocalPlayer.UserId .. ")\n**Mesaj:** " .. fbText
+        })
+        
+        local success = pcall(function()
+            sendHttpRequest({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = payload
+            })
+        end)
+        
+        if success then
+            SendFeedbackBtn.Text = "Sent Successfully! ✔️"
+            FeedbackBox.Text = ""
+        else
+            SendFeedbackBtn.Text = "Error Sending!"
+        end
+        task.wait(2)
+        SendFeedbackBtn.Text = "Send Feedback"
+    end)
+end)
+
+-- Sekme Değiştirme
+local function switchTab(activeTab, activePage)
+    TabSaveID.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    TabSaveID.TextColor3 = Color3.fromRGB(180, 180, 180)
+    TabLibrary.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    TabLibrary.TextColor3 = Color3.fromRGB(180, 180, 180)
+    TabSettings.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    TabSettings.TextColor3 = Color3.fromRGB(180, 180, 180)
+
+    PageSave.Visible = false
+    PageLibrary.Visible = false
+    PageSettings.Visible = false
+
+    activeTab.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
+    activeTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    activePage.Visible = true
+end
+
+TabSaveID.MouseButton1Click:Connect(function() switchTab(TabSaveID, PageSave) end)
+TabLibrary.MouseButton1Click:Connect(function() switchTab(TabLibrary, PageLibrary) end)
+TabSettings.MouseButton1Click:Connect(function() switchTab(TabSettings, PageSettings) end)
+
+switchTab(TabSaveID, PageSave)
+
+-- Müzik İsteği Gönderme (Cooldown Korumalı)
+SendReqBtn.MouseButton1Click:Connect(function()
+    if tick() - lastRequestTick < 5 then
+        SendReqBtn.Text = "Please Wait 5s!"
+        task.wait(1.5)
+        SendReqBtn.Text = "Send Request"
+        return
+    end
+    
+    local sName = NameInput.Text
+    local sId = IDInput.Text
+    
+    if sId == "" or not tonumber(sId) then return end
+    if sName == "" then sName = "Audio " .. sId end
+    
+    lastRequestTick = tick()
+    SendReqBtn.Text = "Sending..."
+    
+    task.spawn(function()
+        local payload = HttpService:JSONEncode({
+            content = "🎵 **Yeni Müzik İsteği Geldi!**\n👤 **İsteyen:** " .. LocalPlayer.Name .. " (ID: " .. LocalPlayer.UserId .. ")\n🏷️ **Müzik Adı:** " .. sName .. "\n🆔 **Audio ID:** " .. sId
+        })
+        
+        local success = pcall(function()
+            sendHttpRequest({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = payload
+            })
+        end)
+        
+        if success then
+            SendReqBtn.Text = "Request Sent! ✔️"
+        else
+            SendReqBtn.Text = "Error Sending!"
+        end
+        task.wait(1.5)
+        SendReqBtn.Text = "Send Request"
+    end)
+    IDInput.Text = ""
+    NameInput.Text = ""
+end)
