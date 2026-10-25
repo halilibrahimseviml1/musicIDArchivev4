@@ -280,7 +280,7 @@ end
 
 local preloadedSongs = {
     {id = "116197983114890", name = "Billie Jean by Admin"}, {id = "95131770144654", name = "AURA = ∞ (Brazilian Phonk/Funk Epic Aura Music) by Admin"},
-    {id = "1842150151", name = "Turkish March by Admib"}, {id = "1837015626", name = "Tokyo Drift by Admin"},
+    {id = "1842150151", name = "Turkish March by Admin"}, {id = "1837015626", name = "Tokyo Drift by Admin"},
     {id = "74107926236166", name = "c00lkidd by Admin"}, {id = "136687027554626", name = "Boss Fight by Admin"},
     {id = "6070263388", name = "Gangsta's Paradise"}, {id = "6689996382", name = "Eminem Without me Beat Loop by Admin"},
     {id = "131731132779759", name = "Moonlight Remix by Admin"}, {id = "1846088038", name = "Morning Mood by Admin"},
@@ -290,10 +290,14 @@ local preloadedSongs = {
     {id = "76650356472656", name = "HLW1SP D by neimare84"}, {id = "96057114806078", name = "TZ TERROR by alexis300el"},
     {id = "88523902860927", name = "Unhappy by R93_Hacker"}, {id = "75485931767123", name = "alone by BAXA_0788"},
     {id = "74475244149345", name = "Paraliann by wery13970"}, {id = "134891622509178", name = "Cobra(sugar) by dba_385"},
-    {id = "85316115477470", name = "FinalPetunia by onlygrilmee"}, {id = "0000000000", name = "coming soon 24"},
-    {id = "0000000000", name = "coming soon 25"}, {id = "0000000000", name = "coming soon 26"},
-    {id = "0000000000", name = "coming soon 27"}, {id = "0000000000", name = "coming soon 28"},
-    {id = "0000000000", name = "coming soon 29"}, {id = "0000000000", name = "coming soon 30"},
+    {id = "85316115477470", name = "FinalPetunia by onlygrilmee"}, {id = "1843529971", name = "punjabi party by d46hnksb"},
+    {id = "103611200713230", name = "MANATILI by kevin_91074"}, {id = "136847769876472", name = "BASKIN by kitsune_noob72"},
+    {id = " 86617433885915", name = "Meia noite by 120HDaniel"}, {id = "142376088", name = "Tacos by DAV145668"},
+    {id = "112214814544629", name = "ANALOG HORROR FUNK by ROSY_K78"}, {id = "121239777513594", name = "Friend Wind☠️ by ROSY_K78"},
+    {id = "88523902860927", name = "Unhappy by 666_66kj"}, {id = "85598267402579", name = "KiT MaB by puchula558722"},
+    {id = "110398343528156", name = "Smooth hill by cxrloxxx1"}, {id = "90089940136467", name = "ASI BALA 10☠️☠️ by sepha53"},
+    {id = "97785209024735", name = "My favorite⭐ by Admin"}, {id = "106980572211798", name = "segundo lugar by sleitheer"},
+    {id = "72142029907010", name = "... by JAJAJAJAJA_0089"}, {id = "70382002676533", name = "HAGALO by Fernando1929004"},
 }
 
 for _, song in ipairs(preloadedSongs) do
