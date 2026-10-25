@@ -212,6 +212,24 @@ SendReqBtn.Font = Enum.Font.GothamBold
 SendReqBtn.Parent = PageSave
 Instance.new("UICorner", SendReqBtn).CornerRadius = UDim.new(0, 6)
 
+-- KİMSENİN YAZAMAYACAĞI ÖZEL METİN ALANI (READONLY)
+local LockedTextBox = Instance.new("TextBox")
+LockedTextBox.Size = UDim2.new(1, 0, 0, 70)
+LockedTextBox.Position = UDim2.new(0, 0, 0, 60)
+LockedTextBox.Text = "Please do not spam and do not re-submit songs already in the music library. Write the songs you would like added here; we will take your requests via our Discord server, test them, and add them. (If possible, please include the song title as well.)                                                          prepared by halilibrahimseviml1 & Gemini AI"
+LockedTextBox.TextColor3 = Color3.fromRGB(220, 220, 220)
+LockedTextBox.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+LockedTextBox.Font = Enum.Font.Gotham
+LockedTextBox.TextSize = 13
+LockedTextBox.TextXAlignment = Enum.TextXAlignment.Left
+LockedTextBox.TextYAlignment = Enum.TextYAlignment.Top
+LockedTextBox.ClearTextOnFocus = false
+LockedTextBox.MultiLine = true
+LockedTextBox.TextWrapped = true -- METNİN ALT SATIRA GEÇMESİNİ SAĞLAR
+LockedTextBox.TextEditable = false -- BAŞKALARININ YAZMASINI / DEĞİŞTİRMESİNİ ENGELLER
+LockedTextBox.Parent = PageSave
+Instance.new("UICorner", LockedTextBox).CornerRadius = UDim.new(0, 6)
+
 -- Music ID Library
 local SearchBar = Instance.new("TextBox")
 SearchBar.Size = UDim2.new(1, 0, 0, 35)
